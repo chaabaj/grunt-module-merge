@@ -1,6 +1,6 @@
 {
   "name": "grunt-module-merge",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Plugin to merge file into module separated file using @module comment annotation",
   "repository": "https://github.com/chaabaj/grunt-module-merge.git",
   "author": {
@@ -9,7 +9,8 @@
     "url": ""
   },
   "keywords": [
-    "gruntplugin"
+    "module",
+    "merge"
   ],
   "main": "Gruntfile.js",
   "engines": {
