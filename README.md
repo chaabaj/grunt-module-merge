@@ -1,6 +1,7 @@
 # grunt-module-merge
 
-> Plugin to merge file into module separated file using @module comment annotation.
+> Experimental
+> Plugin to merge file into module file using @module comment annotation.
 
 ## Getting Started
 This plugin requires Grunt.
