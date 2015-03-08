@@ -1,104 +1,66 @@
-/*
- * grunt-module-concat
- * 
- *
- * Copyright (c) 2014 jalalc
- * Licensed under the MIT license.
+/**
+ * Created by CHAABANE on 08/03/2015.
  */
 
+var fork = require('child_process').fork;
+var nbCoreActive = require('os').cpus().length;
+var mkdirp = require('mkdirp');
 
 module.exports = function (grunt)
 {
-    'use strict';
-
-    // Please see the Grunt documentation for more information regarding task
-    // creation: http://gruntjs.com/creating-tasks
-
-    function Module(name, destDir, prefixName, extension)
+    var killAllProcess = function(childs)
     {
-
-        var _readWrapFile = function (filepath)
+        childs.forEach(function(child)
         {
-            if (filepath !== null || typeof filepath !== 'undefined')
-            {
-                if (!grunt.file.exists(filepath) && !grunt.file.isFile(filepath))
-                {
-                    grunt.fail.fatal('Missing file or not a file : ' + filepath);
-                }
-                return grunt.file.read(filepath);
-            }
-            return '';
-        };
+            child.kill();
+        });
+    };
 
-        var self = {
-            name     : name,
-            out      : [destDir, '/', prefixName, name, '.', extension].join(''),
-            destSrcs : [],
-            appendSrc: function (fileSrc)
-            {
-                self.destSrcs.push(fileSrc);
-            },
-            get      : function (wrapBegin, wrapEnd)
-            {
-                var out = [];
-
-                out.push(_readWrapFile(wrapBegin));
-                self.destSrcs.forEach(function (src)
-                {
-                    out.push(src);
-                });
-                out.push(_readWrapFile(wrapEnd));
-                return out.join('');
-            }
-        };
-        return self;
-    }
-
-    grunt.registerMultiTask('module_merge', 'The best Grunt plugin ever.',
-        function ()
+    var moduleMergeInit = function ()
+    {
+        var files = this.files.reduce(function(oldValue, file)
         {
-            var moduleRegex = /@module\ {1,}[a-zA-Z0-9_-]{1,}\ */;
-            var registeredModules = {};
-            var options = this.options();
+            return oldValue.concat(file.src);
+        }, []);
+        var done = this.async();
+        var childs = [];
+        var nbFilesPerProcess = this.files.length / nbCoreActive;
 
-            this.files.forEach(function (file)
-            {
-                file.src.filter(function (filepath)
-                {
-                    if (!grunt.file.exists(filepath))
-                    {
-                        grunt.fail.warn('Source file ' + filepath + ' not found');
-                        return false;
-                    }
-                    return true;
-                }).forEach(function (filepath)
-                {
-                    var srcFile = grunt.file.read(filepath);
-                    var moduleName = 'global';
-                    var moduleStr = moduleRegex.exec(srcFile);
-                    var module;
+        if (nbFilesPerProcess < 1)
+        {
+            nbCoreActive = files.length;
+            nbFilesPerProcess = 1;
+        }
+        mkdirp.sync(this.files[0].dest);
+        for (var i = 0; i < nbCoreActive; ++i)
+        {
+            var childFiles = files.slice(i * nbFilesPerProcess, (i * nbFilesPerProcess) + nbFilesPerProcess);
 
-                    if (moduleStr != null)
-                    {
-                        moduleName = moduleStr[0].split(' ')[1];
-                    }
-                    module = registeredModules[moduleName];
-                    if (typeof module === 'undefined')
-                    {
-                        module = new Module(moduleName, file.dest, 'module_', options.extension);
-                        registeredModules[moduleName] = module;
-                    }
-                    module.appendSrc(srcFile);
-                });
+            grunt.log.ok('Nb cores : ' + nbCoreActive);
+            var child = fork('src/process-script.js', [this.files[0].dest, childFiles], {
+                cwd : process.cwd()
             });
 
-            for (var moduleName in registeredModules)
+            child.on('exit', function ()
             {
-                var module = registeredModules[moduleName];
+                nbCoreActive--;
+                if (nbCoreActive === 0)
+                {
+                    done();
+                }
+            });
 
-                grunt.file.write(module.out, module.get(options.wrapBegin, options.wrapEnd));
-            }
-            return 0;
+            child.on('message', function(msg)
+            {
+                if (msg.type === 'error')
+                {
+                    killAllProcess(childs);
+                    grunt.fail.fatal(msg.msg);
+                }
+            });
+            childs.push(child);
         }
-    );
+    };
+
+    grunt.registerMultiTask('module_merge', 'Merging module files in one files', moduleMergeInit);
 };

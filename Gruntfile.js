@@ -29,19 +29,14 @@ module.exports = function (grunt) {
 
     // Before generating any new files, remove any previously-created files.
     clean: {
-      tests: ['tmp']
+      tests: ['tmp', 'test/out']
     },
 
     // Configuration to be run (and then tested).
     module_merge: {
         files: {
-            src: ['test/fixtures/**/*.js'],
-            dest: ['test/out/']
-        },
-        options : {
-            wrapBegin : 'test/config/amd_module_begin.js',
-            wrapEnd : 'test/config/amd_module_end.js',
-            extension : 'js'
+            src: ['test/fixtures/**/*.json'],
+            dest: 'test/out'
         }
     },
 

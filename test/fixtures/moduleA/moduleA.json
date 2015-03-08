@@ -1,0 +1,4 @@
+{
+    "name" : "moduleA",
+    "files" : ["index.js", "file2.js"]
+}
