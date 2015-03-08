@@ -39,7 +39,7 @@ Sample of module definition
 
 ```json
 {
-  "name" : "module"
+  "name" : "module",
   "files" : ["somefile.js", "other.js"]
 }
 ```
