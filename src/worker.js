@@ -9,8 +9,6 @@ var globule = require('globule');
 var destArgs = process.argv[2];
 var filesArgs = process.argv.slice(3);
 
-console.log(destArgs);
-
 var resolveFiles = function (files, modulePath)
 {
     return globule.find(files, {srcBase: modulePath, prefixBase: true})
