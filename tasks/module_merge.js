@@ -5,7 +5,36 @@
 var mkdirp = require('mkdirp');
 var fs = require('fs');
 var html2js = require('ng-html2js');
+var Q = require('q');
+var glob = require('glob');
 
+var resolveFiles = function(files, modulePath)
+{
+    var resolvedFiles = [];
+    var deferred = Q.defer();
+
+    files.forEach(function(file, index)
+    {
+        var fullpath = [modulePath, file].join('/');
+
+        glob(fullpath, null, function(err, filesFound)
+        {
+            if (!err)
+            {
+                resolvedFiles = resolvedFiles.concat(filesFound);
+            }
+            else
+            {
+                console.error(err);
+            }
+            if (index === files.length - 1)
+            {
+                deferred.resolve(resolvedFiles);
+            }
+        });
+    });
+    return deferred.promise;
+};
 
 var moduleMerge = function (moduleFiles, dest)
 {
@@ -16,27 +45,33 @@ var moduleMerge = function (moduleFiles, dest)
     {
         var content = fs.readFileSync(moduleFile);
         var moduleDef = JSON.parse(content.toString());
-        var files = moduleDef.files;
         var outputFile = [dest, moduleDef.name].join('/') + '.js';
         var modulePath = moduleFile.substring(0, moduleFile.lastIndexOf("/"));
 
 
-
-        files.forEach(function (file)
+        resolveFiles(moduleDef.files, modulePath).then(function(files)
         {
-            var fullpath = [modulePath, file].join('/');
+            var alreadyAppendedFiles = {};
 
-            if (tplRegex.test(file))
+            files.forEach(function (file)
             {
-                var content = html2js(file, fs.readFileSync(fullpath, 'utf-8'), moduleDef.name, null);
+                if (!alreadyAppendedFiles[file])
+                {
+                    if (tplRegex.test(file))
+                    {
+                        var content = html2js(file, fs.readFileSync(file, 'utf-8'), moduleDef.name, null);
 
-                fs.appendFileSync(outputFile, content);
-            }
-            else
-            {
-                fs.appendFileSync(outputFile, fs.readFileSync(fullpath));
-            }
+                        fs.appendFileSync(outputFile, content);
+                    }
+                    else
+                    {
+                        fs.appendFileSync(outputFile, fs.readFileSync(file));
+                    }
+                    alreadyAppendedFiles[file] = true;
+                }
+            });
         });
+
     });
     return 0;
 };

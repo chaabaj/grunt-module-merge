@@ -1,6 +1,6 @@
 {
   "name": "grunt-module-merge",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Plugin to merge file into module separated file using a comment annotation module",
   "repository": "https://github.com/chaabaj/grunt-module-merge.git",
   "author": {
@@ -19,7 +19,8 @@
   "license": "MIT",
   "dependencies" : {
       "mkdirp" : "0.5.0",
-      "ng-html2js" : "2.0.0"
+      "ng-html2js" : "2.0.0",
+      "glob" : "5.0.1"
   },
   "devDependencies": {
     "grunt-contrib-clean": "~0.5.0",
