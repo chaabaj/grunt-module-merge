@@ -1,7 +1,7 @@
 # grunt-module-merge
 
 > Experimental
-> Plugin to merge file into module file using @module comment annotation.
+> Plugin to create module by merging files using a module declaration file
 
 ## Getting Started
 This plugin requires Grunt.
