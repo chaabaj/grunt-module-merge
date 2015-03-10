@@ -12,6 +12,7 @@ module.exports = function (grunt)
 
     var moduleMergeInit = function ()
     {
+        var childs = [];
         var done = this.async();
         var dest = this.files[0].dest;
         var files = this.files.reduce(function (oldValue, file)
@@ -33,10 +34,12 @@ module.exports = function (grunt)
         grunt.log.writeln('For ' + nbFilePerCore  + ' module per core');
         for (var i = 0; i < filesLength; i += nbFilePerCore)
         {
+
             var childFiles = files.slice(i, i + nbFilePerCore);
 
             var child = fork(workerPath, [dest].concat(childFiles));
 
+            childs.push(child);
             child.on('message', function(err)
             {
                 grunt.fail.fatal(err.message);
@@ -44,10 +47,15 @@ module.exports = function (grunt)
 
             child.on('exit', function()
             {
-                if (--nbCores === 0)
+                var finished = childs.every(function(child)
+                {
+                    return child.connected === false;
+                });
+                if (finished)
                 {
                     done();
                 }
+
             });
         }
 
