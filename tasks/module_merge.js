@@ -42,7 +42,7 @@ module.exports = function (grunt)
             childs.push(child);
             child.on('message', function(err)
             {
-                grunt.fail.fatal(err.moduleFile + ' : ' + err.message);
+                grunt.fail.fatal(err.moduleName + ' : ' + err.msg);
             });
 
             child.on('exit', function()
