@@ -13,16 +13,17 @@ console.log(destArgs);
 
 var resolveFiles = function (files, modulePath)
 {
-    return globule.find(files, {srcBase: modulePath, prefixBase : true})
+    return globule.find(files, {srcBase: modulePath, prefixBase: true})
 };
 
 var moduleMerge = function (moduleFiles, dest)
 {
     var tplRegex = /.*\.tpl\.html|.*\.html/;
 
-    try
+
+    moduleFiles.forEach(function (moduleFile)
     {
-        moduleFiles.forEach(function (moduleFile)
+        try
         {
             var content = fs.readFileSync(moduleFile);
             var moduleDef = JSON.parse(content.toString());
@@ -48,14 +49,15 @@ var moduleMerge = function (moduleFiles, dest)
                     alreadyAppendedFiles[file] = true;
                 }
             });
+        }
+        catch (err)
+        {
+
+            process.send('message', {type: 'error', moduleName: moduleFile, msg: err.message});
+        }
 
 
-        });
-    }
-    catch (err)
-    {
-        process.send('message', err);
-    }
+    });
 
     return 0;
 };
