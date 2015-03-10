@@ -53,7 +53,7 @@ var moduleMerge = function (moduleFiles, dest)
         catch (err)
         {
 
-            process.send('message', {type: 'error', moduleName: moduleFile, msg: err.message});
+            process.send( {type: 'error', moduleName: moduleFile, msg: err.message});
         }
 
 
