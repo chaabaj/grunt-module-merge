@@ -4,9 +4,14 @@
 
 var mkdirp = require('mkdirp');
 var fs = require('fs');
+var html2js = require('ng-html2js');
+
 
 var moduleMerge = function (moduleFiles, dest)
 {
+
+    var tplRegex = /.*\.tpl\.html|.*\.html/;
+
     moduleFiles.forEach(function (moduleFile)
     {
         var content = fs.readFileSync(moduleFile);
@@ -15,11 +20,22 @@ var moduleMerge = function (moduleFiles, dest)
         var outputFile = [dest, moduleDef.name].join('/') + '.js';
         var modulePath = moduleFile.substring(0, moduleFile.lastIndexOf("/"));
 
+
+
         files.forEach(function (file)
         {
             var fullpath = [modulePath, file].join('/');
 
-            fs.appendFileSync(outputFile, fs.readFileSync(fullpath));
+            if (tplRegex.test(file))
+            {
+                var content = html2js(file, fs.readFileSync(fullpath, 'utf-8'), moduleDef.name, null);
+
+                fs.appendFileSync(outputFile, content);
+            }
+            else
+            {
+                fs.appendFileSync(outputFile, fs.readFileSync(fullpath));
+            }
         });
     });
     return 0;

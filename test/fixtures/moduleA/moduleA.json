@@ -1,4 +1,4 @@
 {
     "name" : "moduleA",
-    "files" : ["index.js", "file2.js"]
+    "files" : ["index.js", "file2.js", "test.tpl.html"]
 }
