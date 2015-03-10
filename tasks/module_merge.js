@@ -3,64 +3,54 @@
  */
 
 var mkdirp = require('mkdirp');
-var fs = require('fs');
-var html2js = require('ng-html2js');
-var globule = require('globule');
-
-var resolveFiles = function (files, modulePath)
-{
-    return globule.find(files, {srcBase: modulePath, prefixBase : true})
-};
-
-var moduleMerge = function (moduleFiles, dest)
-{
-    var tplRegex = /.*\.tpl\.html|.*\.html/;
-
-    moduleFiles.forEach(function (moduleFile)
-    {
-        var content = fs.readFileSync(moduleFile);
-        var moduleDef = JSON.parse(content.toString());
-        var outputFile = [dest, moduleDef.name].join('/') + '.js';
-        var modulePath = moduleFile.substring(0, moduleFile.lastIndexOf("/"));
-        var files = resolveFiles(moduleDef.files, modulePath);
-        var alreadyAppendedFiles = {};
-
-        files.forEach(function (file)
-        {
-            if (!alreadyAppendedFiles[file])
-            {
-                if (tplRegex.test(file))
-                {
-                    var content = html2js(file, fs.readFileSync(file, 'utf-8'), moduleDef.name, null);
-
-                    fs.appendFileSync(outputFile, content);
-                }
-                else
-                {
-                    fs.appendFileSync(outputFile, fs.readFileSync(file));
-                }
-                alreadyAppendedFiles[file] = true;
-            }
-        });
-
-
-    });
-    return 0;
-};
-
+var workerPath = [__dirname,'../src/worker.js'].join('/');
+var nbCores = require('os').cpus().length;
+var fork = require('child_process').fork;
 
 module.exports = function (grunt)
 {
 
     var moduleMergeInit = function ()
     {
+        var done = this.async();
+        var dest = this.files[0].dest;
         var files = this.files.reduce(function (oldValue, file)
         {
             return oldValue.concat(file.src);
         }, []);
 
-        mkdirp.sync(this.files[0].dest);
-        moduleMerge(files, this.files[0].dest);
+        mkdirp.sync(dest);
+
+        var nbFilePerCore = files.length / nbCores;
+
+        if (nbFilePerCore < 1)
+        {
+            nbFilePerCore = 1;
+        }
+        var filesLength = files.length;
+
+        grunt.log.writeln('Running merge module on : ' + nbCores);
+        grunt.log.writeln('For ' + nbFilePerCore  + ' module per core');
+        for (var i = 0; i < filesLength; i += nbFilePerCore)
+        {
+            var childFiles = files.slice(i, i + nbFilePerCore);
+
+            var child = fork(workerPath, [dest].concat(childFiles));
+
+            child.on('message', function(err)
+            {
+                grunt.fail.fatal(err.message);
+            });
+
+            child.on('exit', function()
+            {
+                if (--nbCores === 0)
+                {
+                    done();
+                }
+            });
+        }
+
 
     };
 
