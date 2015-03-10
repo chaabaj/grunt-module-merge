@@ -1,4 +1,4 @@
 {
     "name" : "moduleA",
-    "files" : ["index.js", "**/*.js", "**/*.tpl.html"]
+    "files" : ["index.js", "**/*.js", "**/*.tpl.html", "!file-to-exclude.js"]
 }

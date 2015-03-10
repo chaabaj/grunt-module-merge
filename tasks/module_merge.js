@@ -5,40 +5,15 @@
 var mkdirp = require('mkdirp');
 var fs = require('fs');
 var html2js = require('ng-html2js');
-var Q = require('q');
-var glob = require('glob');
+var globule = require('globule');
 
-var resolveFiles = function(files, modulePath)
+var resolveFiles = function (files, modulePath)
 {
-    var resolvedFiles = [];
-    var deferred = Q.defer();
-
-    files.forEach(function(file, index)
-    {
-        var fullpath = [modulePath, file].join('/');
-
-        glob(fullpath, null, function(err, filesFound)
-        {
-            if (!err)
-            {
-                resolvedFiles = resolvedFiles.concat(filesFound);
-            }
-            else
-            {
-                console.error(err);
-            }
-            if (index === files.length - 1)
-            {
-                deferred.resolve(resolvedFiles);
-            }
-        });
-    });
-    return deferred.promise;
+    return globule.find(files, {srcBase: modulePath, prefixBase : true})
 };
 
 var moduleMerge = function (moduleFiles, dest)
 {
-
     var tplRegex = /.*\.tpl\.html|.*\.html/;
 
     moduleFiles.forEach(function (moduleFile)
@@ -47,30 +22,27 @@ var moduleMerge = function (moduleFiles, dest)
         var moduleDef = JSON.parse(content.toString());
         var outputFile = [dest, moduleDef.name].join('/') + '.js';
         var modulePath = moduleFile.substring(0, moduleFile.lastIndexOf("/"));
+        var files = resolveFiles(moduleDef.files, modulePath);
+        var alreadyAppendedFiles = {};
 
-
-        resolveFiles(moduleDef.files, modulePath).then(function(files)
+        files.forEach(function (file)
         {
-            var alreadyAppendedFiles = {};
-
-            files.forEach(function (file)
+            if (!alreadyAppendedFiles[file])
             {
-                if (!alreadyAppendedFiles[file])
+                if (tplRegex.test(file))
                 {
-                    if (tplRegex.test(file))
-                    {
-                        var content = html2js(file, fs.readFileSync(file, 'utf-8'), moduleDef.name, null);
+                    var content = html2js(file, fs.readFileSync(file, 'utf-8'), moduleDef.name, null);
 
-                        fs.appendFileSync(outputFile, content);
-                    }
-                    else
-                    {
-                        fs.appendFileSync(outputFile, fs.readFileSync(file));
-                    }
-                    alreadyAppendedFiles[file] = true;
+                    fs.appendFileSync(outputFile, content);
                 }
-            });
+                else
+                {
+                    fs.appendFileSync(outputFile, fs.readFileSync(file));
+                }
+                alreadyAppendedFiles[file] = true;
+            }
         });
+
 
     });
     return 0;
