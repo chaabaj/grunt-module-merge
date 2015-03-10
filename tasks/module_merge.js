@@ -21,7 +21,7 @@ module.exports = function (grunt)
 
         mkdirp.sync(dest);
 
-        var nbFilePerCore = files.length / nbCores;
+        var nbFilePerCore = Math.round(files.length / nbCores);
 
         if (nbFilePerCore < 1)
         {
