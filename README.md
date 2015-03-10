@@ -53,7 +53,7 @@ Example :
 ```json
 {
   "name" : "module",
-  "files" : ["somefile.js", "other.js", "*.js, "*.tpl.html"]
+  "files" : ["somefile.js", "other.js", "*.js", "*.tpl.html"]
 }
 ```
 
