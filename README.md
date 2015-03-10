@@ -40,12 +40,25 @@ Sample of module definition
 ```json
 {
   "name" : "module",
-  "files" : ["somefile.js", "other.js"]
+  "files" : ["somefile.js", "other.js", "*.js]
+}
+```
+
+The base path is the path where is the module definition file.
+We support also the integration of angular template in the module
+
+Example : 
+
+
+```json
+{
+  "name" : "module",
+  "files" : ["somefile.js", "other.js", "*.js, "*.tpl.html"]
 }
 ```
 
 ## Release History
-0.0.3
+0.1.6
 
 ## License
 Copyright (c) 2014 jalalc. Licensed under the MIT license.
