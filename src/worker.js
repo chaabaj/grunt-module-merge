@@ -37,7 +37,7 @@ var moduleMerge = function (moduleFiles, dest)
                 {
                     if (tplRegex.test(file))
                     {
-                        var content = html2js(file, fs.readFileSync(file, 'utf-8'),
+                        var content = html2js(file.replace(/\\/g,"/"), fs.readFileSync(file, 'utf-8'),
                                               moduleDef.viewsModule || moduleDef.name, null);
 
                         fs.appendFileSync(outputFile, content);
