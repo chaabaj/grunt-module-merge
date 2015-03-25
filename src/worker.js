@@ -28,6 +28,7 @@ var moduleMerge = function (moduleFiles, dest)
             var outputFile = [dest, moduleDef.name].join('/') + '.js';
             var modulePath = moduleFile.substring(0, moduleFile.lastIndexOf("/"));
             var files = resolveFiles(moduleDef.files, modulePath);
+            console.log(files);
             var alreadyAppendedFiles = {};
 
             files.forEach(function (file)
@@ -36,7 +37,8 @@ var moduleMerge = function (moduleFiles, dest)
                 {
                     if (tplRegex.test(file))
                     {
-                        var content = html2js(file, fs.readFileSync(file, 'utf-8'), moduleDef.name, null);
+                        var content = html2js(file, fs.readFileSync(file, 'utf-8'),
+                                              moduleDef.viewsModule || moduleDef.name, null);
 
                         fs.appendFileSync(outputFile, content);
                     }
